@@ -1,38 +1,62 @@
+import os
+
+from matplotlib.colors import LinearSegmentedColormap
+from watchdog.observers import Observer
+from watchdog.events import FileSystemEventHandler
 from wordcloud import WordCloud
 import matplotlib.pyplot as plt
+import time
+
+# Eigene Colormap definieren
+custom_colors = ["#2C3E50", "#2980B9", "#27AE60", "#E74C3C", "#8E44AD"]  # Dunkle, kontrastreiche Farben
+custom_colormap = LinearSegmentedColormap.from_list("custom_colormap", custom_colors)
+
+class FileChangeHandler(FileSystemEventHandler):
+    def __init__(self, files):
+        self.files = [os.path.abspath(file) for file in files]
+
+    def on_modified(self, event):
+        if os.path.abspath(event.src_path) in self.files:
+            print(f"Änderung erkannt: {event.src_path}")
+            generate_wordcloud(self.files)
 
 
-
-def show_wortwolke(files: [str] = ["input2.txt"]):
+def generate_wordcloud(files):
     text = ''
-    # read text from files arguments
     for file in files:
         with open(file, 'r', encoding='utf-8') as f:
             text += f.read()
 
-    # Generate a word cloud image
-    wordcloud = wordcloud = WordCloud(
+    wordcloud = WordCloud(
         width=1920,
         height=1080,
         background_color="#FFE4D6",
-        colormap="inferno",
+        colormap=custom_colormap,
         max_font_size=200,
         min_font_size=10,
         max_words=100,
-        font_path=None  # Optional: Pfad zu einer Schriftart
+        font_path=None
     ).generate(text)
 
     plt.imshow(wordcloud, interpolation="bilinear")
     plt.axis("off")
     plt.show()
-    # Save the word cloud image to a file
     wordcloud.to_file("wordcloud.png")
-    # save with 1080p resolution
+    print("Wortwolke wurde aktualisiert und gespeichert.")
 
 
-# Press the green button in the gutter to run the script.
 if __name__ == '__main__':
-    # show_wortwolke(["input1.txt"])
-    show_wortwolke(["input1.txt", "input2.txt"])
+    files_to_watch = ["input1.txt", "input2.txt"]
+    event_handler = FileChangeHandler(files=files_to_watch)
+    observer = Observer()
+    for file in files_to_watch:
+        observer.schedule(event_handler, path=os.path.dirname(os.path.abspath(file)), recursive=False)
 
-# See PyCharm help at https://www.jetbrains.com/help/pycharm/
+    observer.start()
+    print("Überwachung gestartet. Änderungen an den Dateien werden erkannt.")
+    try:
+        while True:
+            time.sleep(1)
+    except KeyboardInterrupt:
+        observer.stop()
+    observer.join()

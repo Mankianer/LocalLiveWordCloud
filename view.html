@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8">
+  <title>Live PNG-Anzeige</title>
+  <style>
+    html, body {
+      margin: 0;
+      padding: 0;
+      background: #000;
+      overflow: hidden;
+      height: 100%;
+      width: 100%;
+    }
+    img {
+      display: block;
+      width: 100vw;
+      height: 100vh;
+      object-fit: contain;
+    }
+  </style>
+</head>
+<body>
+  <img id="liveImage" src="wordcloud.png" alt="Live-Bild">
+  <script>
+    const img = document.getElementById('liveImage');
+    const originalSrc = img.src.split('?')[0];
+
+    function reloadImage() {
+      const timestamp = Date.now();
+      img.src = `${originalSrc}?t=${timestamp}`;
+    }
+
+    setInterval(reloadImage, 1000); // Bild alle 1 Sekunde neu laden
+  </script>
+</body>
+</html>
