@@ -1,5 +1,6 @@
 import os
-
+import numpy as np
+from PIL import Image
 from matplotlib.colors import LinearSegmentedColormap
 from watchdog.observers import Observer
 from watchdog.events import FileSystemEventHandler
@@ -27,6 +28,9 @@ def generate_wordcloud(files):
         with open(file, 'r', encoding='utf-8') as f:
             text += f.read()
 
+    # Maske laden (Kreuz-Bild)
+    mask = np.array(Image.open("kreuz.png"))
+
     wordcloud = WordCloud(
         width=1920,
         height=1080,
@@ -35,6 +39,9 @@ def generate_wordcloud(files):
         max_font_size=200,
         min_font_size=10,
         max_words=100,
+        mask=mask,  # Maske anwenden
+        contour_color="black",  # Optional: Konturfarbe
+        contour_width=0,  # Optional: Konturbreite
         font_path=None
     ).generate(text)
 
