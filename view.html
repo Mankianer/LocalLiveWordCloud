@@ -2,7 +2,7 @@
 <html lang="de">
 <head>
   <meta charset="UTF-8">
-  <title>Live PNG-Anzeige</title>
+  <title>Wordcloud mit sanften Übergängen</title>
   <style>
     html, body {
       margin: 0;
@@ -11,27 +11,78 @@
       overflow: hidden;
       height: 100%;
       width: 100%;
+      display: flex;
+      justify-content: center;
+      align-items: center;
     }
-    img {
-      display: block;
-      width: 100vw;
-      height: 100vh;
-      object-fit: contain;
+    #wordcloudContainer {
+      width: 100%;
+      height: 100%;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      opacity: 1;
+      transition: opacity 0.5s ease-in-out;
+    }
+    #wordcloudContainer.hidden {
+      opacity: 0;
+    }
+    svg {
+      width: 100%;
+      height: 100%;
     }
   </style>
 </head>
 <body>
-  <img id="liveImage" src="wordcloud.png" alt="Live-Bild">
+  <div id="wordcloudContainer">
+    <svg id="wordcloud" xmlns="http://www.w3.org/2000/svg"></svg>
+  </div>
   <script>
-    const img = document.getElementById('liveImage');
-    const originalSrc = img.src.split('?')[0];
+  const container = document.getElementById('wordcloudContainer');
+  const svgElement = document.getElementById('wordcloud');
+  let currentSvgContent = ''; // Zwischenspeicher für das aktuelle SVG
 
-    function reloadImage() {
-      const timestamp = Date.now();
-      img.src = `${originalSrc}?t=${timestamp}`;
-    }
+  function fetchAndMergeWordcloud() {
+    fetch('wordcloud.html')
+      .then(response => response.text())
+      .then(data => {
+        const parser = new DOMParser();
+        const newSvg = parser.parseFromString(data, 'text/html').querySelector('svg');
 
-    setInterval(reloadImage, 250);
-  </script>
+        if (newSvg) {
+          const newTextElements = Array.from(newSvg.querySelectorAll('text'));
+          const existingTextElements = Array.from(svgElement.querySelectorAll('text'));
+
+          // Vergleiche und füge neue Elemente hinzu
+          newTextElements.forEach(newText => {
+            const exists = existingTextElements.some(existingText =>
+              existingText.innerHTML === newText.innerHTML &&
+              existingText.getAttribute('transform') === newText.getAttribute('transform')
+            );
+
+            if (!exists) {
+              // Klonen und hinzufügen
+              const newElement = newText.cloneNode(true);
+              newElement.style.opacity = 0; // Start mit 0 für Transition
+              svgElement.appendChild(newElement);
+
+              // Sanftes Einblenden
+              setTimeout(() => {
+                newElement.style.transition = 'opacity 0.5s ease-in-out';
+                newElement.style.opacity = 1;
+              }, 0);
+            }
+          });
+
+          // Aktualisiere den Zwischenspeicher
+          currentSvgContent = newSvg.innerHTML;
+        }
+      })
+      .catch(error => console.error('Fehler beim Laden des SVG:', error));
+  }
+
+  // Überprüft die Wordcloud alle 2 Sekunden
+  setInterval(fetchAndMergeWordcloud, 2000);
+</script>
 </body>
 </html>

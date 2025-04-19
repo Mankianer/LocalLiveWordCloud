@@ -45,11 +45,43 @@ def generate_wordcloud(files):
         font_path=None
     ).generate(text)
 
-    plt.imshow(wordcloud, interpolation="bilinear")
-    plt.axis("off")
-    plt.show()
-    wordcloud.to_file("wordcloud.png")
-    print("Wortwolke wurde aktualisiert und gespeichert.")
+    # Wordcloud als SVG exportieren
+    svg_content = wordcloud.to_svg()
+
+    # HTML-Datei erstellen
+    html_content = f"""
+    <!DOCTYPE html>
+    <html lang="de">
+    <head>
+        <meta charset="UTF-8">
+        <title>Wordcloud</title>
+        <style>
+            body {{
+                margin: 0;
+                padding: 0;
+                display: flex;
+                justify-content: center;
+                align-items: center;
+                height: 100vh;
+                background-color: #FFE4D6;
+            }}
+            svg {{
+                width: 100%;
+                height: auto;
+            }}
+        </style>
+    </head>
+    <body>
+        {svg_content}
+    </body>
+    </html>
+    """
+
+    # HTML-Datei speichern
+    with open("wordcloud.html", "w", encoding="utf-8") as html_file:
+        html_file.write(html_content)
+
+    print("Wordcloud wurde als HTML-Datei gespeichert.")
 
 
 if __name__ == '__main__':
